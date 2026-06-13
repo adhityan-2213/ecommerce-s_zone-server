@@ -29,7 +29,10 @@ const INITIAL_PORT = parseInt(process.env.PORT, 10) || 5000;
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+  "http://localhost:5173",
+  "https://your-frontend.vercel.app"
+],
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
@@ -75,8 +78,12 @@ const startServer = (port) => {
   });
 };
 
-startServer(INITIAL_PORT);
-
 app.get("/", (req, res) => {
   res.send("Server is running...");
 });
+
+if (process.env.NODE_ENV !== "production") {
+  startServer(INITIAL_PORT);
+}
+
+module.exports = app;
