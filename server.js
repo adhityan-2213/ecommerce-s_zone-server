@@ -29,7 +29,7 @@ const INITIAL_PORT = parseInt(process.env.PORT, 10) || 5000;
 
 app.use(
   cors({
-    origin: true,
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
@@ -75,11 +75,4 @@ const startServer = (port) => {
   });
 };
 
-// If this file is run directly (node server.js), start the HTTP server.
-// When imported (e.g. by a serverless wrapper), export the Express app
-// so the wrapper can handle requests without the app attempting to listen.
-if (require.main === module) {
-  startServer(INITIAL_PORT);
-}
-
-module.exports = app;
+startServer(INITIAL_PORT);
