@@ -76,3 +76,7 @@ const startServer = (port) => {
 };
 
 startServer(INITIAL_PORT);
+
+app.get("/", (req, res) => {
+  res.send("Server is running...");
+});
