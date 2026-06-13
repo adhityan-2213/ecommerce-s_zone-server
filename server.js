@@ -86,11 +86,15 @@ if (process.env.NODE_ENV !== "production") {
   startServer(INITIAL_PORT);
 }
 
-module.exports = app;
-
-app.get("/api/test", (req, res) => {
+app.get("/api/test-db", (req, res) => {
   res.json({
-    success: true,
-    message: "Backend Working"
+    mongoState: mongoose.connection.readyState,
+    message:
+      mongoose.connection.readyState === 1
+        ? "MongoDB Connected"
+        : "MongoDB Not Connected",
   });
 });
+
+module.exports = app;
+
