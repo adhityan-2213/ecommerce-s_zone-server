@@ -30,7 +30,7 @@ const INITIAL_PORT = parseInt(process.env.PORT, 10) || 5000;
 app.use(
   cors({
     origin: [
-  "https://ecommerce-s-zone-server-ga1x.vercel.app/",
+  "http://localhost:5173",
   "https://your-frontend.vercel.app"
 ],
     methods: ["GET", "POST", "DELETE", "PUT"],
