@@ -30,7 +30,7 @@ const INITIAL_PORT = parseInt(process.env.PORT, 10) || 5000;
 app.use(
   cors({
     origin: [
-  "http://localhost:5173",
+  "https://ecommerce-s-zone-server-ga1x.vercel.app/",
   "https://your-frontend.vercel.app"
 ],
     methods: ["GET", "POST", "DELETE", "PUT"],
@@ -87,3 +87,10 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 module.exports = app;
+
+app.get("/api/test", (req, res) => {
+  res.json({
+    success: true,
+    message: "Backend Working"
+  });
+});
