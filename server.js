@@ -25,14 +25,18 @@ const PORT = process.env.PORT || 5000;
    MongoDB Connection
 ========================= */
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB Connected");
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB Error:", err);
-  });
+// Only connect directly in development mode
+// Production uses serverless wrapper (api/index.js) to manage connections
+if (process.env.NODE_ENV !== "production") {
+  mongoose
+    .connect(process.env.MONGO_URI)
+    .then(() => {
+      console.log("✅ MongoDB Connected");
+    })
+    .catch((err) => {
+      console.error("❌ MongoDB Error:", err);
+    });
+}
 
 /* =========================
    Middleware
