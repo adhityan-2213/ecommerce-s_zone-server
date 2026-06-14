@@ -2,36 +2,51 @@ const serverless = require("serverless-http");
 const app = require("../server");
 const connectDB = require("../db");
 
-console.log("API Handler - NODE_ENV:", process.env.NODE_ENV);
-console.log("API Handler - MONGO_URI exists:", !!process.env.MONGO_URI);
+let isDbConnecting = false;
+let dbConnected = false;
 
 const handler = serverless(app);
 
 module.exports = async (req, res) => {
-	try {
-		if (!global.__dbConnected) {
-			console.log("Connecting to MongoDB from serverless handler...");
-			try {
-				await connectDB();
-				global.__dbConnected = true;
-				console.log("✅ DB Connected in serverless handler");
-			} catch (err) {
-				console.error('❌ Failed to connect to DB in serverless wrapper:', err.message);
-				return res.status(500).json({
-					success: false,
-					message: 'Database connection error: ' + err.message,
-					mongoState: 0,
-				});
-			}
+	// Ensure MongoDB is connected before processing request
+	if (!dbConnected && !isDbConnecting) {
+		isDbConnecting = true;
+		try {
+			console.log("Connecting to MongoDB...");
+			await connectDB();
+			dbConnected = true;
+			console.log("✅ MongoDB connected successfully");
+		} catch (err) {
+			console.error("❌ Failed to connect to MongoDB:", err.message);
+			isDbConnecting = false;
+			return res.status(500).json({
+				success: false,
+				message: "Database connection failed",
+				error: err.message,
+			});
+		}
+	}
+
+	// Wait for connection if currently connecting
+	if (!dbConnected) {
+		let waitCount = 0;
+		while (!dbConnected && waitCount < 50) {
+			await new Promise(resolve => setTimeout(resolve, 100));
+			waitCount++;
 		}
 
-		return handler(req, res);
-	} catch (error) {
-		console.error('❌ Serverless handler error:', error);
-		return res.status(500).json({
-			success: false,
-			message: 'Internal server error: ' + error.message,
-		});
+		if (!dbConnected) {
+			console.error("❌ Database connection timeout");
+			return res.status(500).json({
+				success: false,
+				message: "Database connection timeout",
+			});
+		}
 	}
+
+	// Process the request through Express
+	return handler(req, res);
 };
+
+
 
