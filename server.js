@@ -5,6 +5,12 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 require("dotenv").config();
 
+// Debug: Log environment
+console.log("📝 Environment Debug:");
+console.log("  NODE_ENV:", process.env.NODE_ENV);
+console.log("  MONGO_URI exists:", !!process.env.MONGO_URI);
+console.log("  JWT_SECRET exists:", !!process.env.JWT_SECRET_KEY);
+
 const authRouter = require("./routes/auth/auth-routes");
 const adminProductsRouter = require("./routes/admin/products-routes");
 const adminOrderRouter = require("./routes/admin/order-routes");
@@ -25,18 +31,17 @@ const PORT = process.env.PORT || 5000;
    MongoDB Connection
 ========================= */
 
-// Only connect directly in development mode
-// Production uses serverless wrapper (api/index.js) to manage connections
-if (process.env.NODE_ENV !== "production") {
-  mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => {
-      console.log("✅ MongoDB Connected");
-    })
-    .catch((err) => {
-      console.error("❌ MongoDB Error:", err);
-    });
-}
+mongoose
+  .connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 5000,
+  })
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB Error:", err.message);
+    // Don't throw - let the app start and return errors on DB calls
+  });
 
 /* =========================
    Middleware
