@@ -27,10 +27,18 @@ const registerUser = async (req, res) => {
       message: "Registration successful",
     });
   } catch (e) {
-    console.log(e);
+    console.error('Register Error:', e);
+    if (e && e.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already registered',
+      });
+    }
+
+    const message = e && e.message ? e.message : 'Some error occured';
     res.status(500).json({
       success: false,
-      message: "Some error occured",
+      message,
     });
   }
 };
