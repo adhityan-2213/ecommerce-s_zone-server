@@ -106,5 +106,12 @@ if (process.env.NODE_ENV !== "production") {
   startServer(INITIAL_PORT);
 }
 
+app.get("/api/check-env", (req, res) => {
+  res.json({
+    hasMongoUri: !!process.env.MONGO_URI,
+    mongoUriStart: process.env.MONGO_URI?.substring(0, 40),
+  });
+});
+
 // Export for Vercel
 module.exports = app;
