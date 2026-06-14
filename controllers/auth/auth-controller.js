@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const User = require("../../models/User");
 
 //register
@@ -7,6 +8,18 @@ const registerUser = async (req, res) => {
   const { userName, email, password } = req.body;
 
   try {
+    // Ensure mongoose is connected (quick connect to avoid buffering timeouts)
+    if (mongoose.connection.readyState !== 1) {
+      try {
+        await Promise.race([
+          mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 }),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('MongoDB connect timeout')), 8000)),
+        ]);
+      } catch (connErr) {
+        console.error('DB connect error in registerUser:', connErr.message || connErr);
+        return res.status(500).json({ success: false, message: connErr.message || 'Database connection error' });
+      }
+    }
     const checkUser = await User.findOne({ email });
     if (checkUser)
       return res.json({
@@ -48,6 +61,18 @@ const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Ensure mongoose is connected before DB operations
+    if (mongoose.connection.readyState !== 1) {
+      try {
+        await Promise.race([
+          mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 }),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('MongoDB connect timeout')), 8000)),
+        ]);
+      } catch (connErr) {
+        console.error('DB connect error in loginUser:', connErr.message || connErr);
+        return res.status(500).json({ success: false, message: connErr.message || 'Database connection error' });
+      }
+    }
     const checkUser = await User.findOne({ email });
     if (!checkUser)
       return res.json({
