@@ -98,23 +98,6 @@ app.get("/", (req, res) => {
   res.send("Server is running...");
 });
 
-// Temporary debug route: attempt direct DB connection and return error message
-app.get("/api/db-debug", async (req, res) => {
-  try {
-    // attempt a direct connection with short timeout
-    await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 5000,
-      connectTimeoutMS: 5000,
-    });
-
-    return res.json({ success: true, message: "Connected to MongoDB" });
-  } catch (err) {
-    console.error("DB-DEBUG ERROR:", err);
-    return res.status(500).json({ success: false, message: err.message });
-  }
-});
-
 /* =========================
    MongoDB Test Route
 ========================= */
