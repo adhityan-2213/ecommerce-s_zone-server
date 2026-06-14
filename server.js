@@ -19,15 +19,25 @@ const shopReviewRouter = require("./routes/shop/review-routes");
 const commonFeatureRouter = require("./routes/common/feature-routes");
 
 const app = express();
-const INITIAL_PORT = parseInt(process.env.PORT, 10) || 5000;
+const PORT = process.env.PORT || 5000;
 
-// MongoDB Connection
+/* =========================
+   MongoDB Connection
+========================= */
+
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((error) => console.log(error));
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB Error:", err);
+  });
 
-// CORS
+/* =========================
+   Middleware
+========================= */
+
 app.use(
   cors({
     origin: [
@@ -35,24 +45,22 @@ app.use(
       "https://ecommerce-s-zone-client.vercel.app",
     ],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "Cache-Control",
-      "Expires",
-      "Pragma",
-    ],
   })
 );
 
 app.use(cookieParser());
 app.use(express.json());
 
-// Static uploads
+/* =========================
+   Static Files
+========================= */
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
+/* =========================
+   Routes
+========================= */
+
 app.use("/api/auth", authRouter);
 
 app.use("/api/admin/products", adminProductsRouter);
@@ -67,15 +75,23 @@ app.use("/api/shop/review", shopReviewRouter);
 
 app.use("/api/common/feature", commonFeatureRouter);
 
-// Root Route
+/* =========================
+   Health Check
+========================= */
+
 app.get("/", (req, res) => {
   res.send("Server is running...");
 });
 
-// MongoDB Test Route
+/* =========================
+   MongoDB Test Route
+========================= */
+
 app.get("/api/test-db", (req, res) => {
   res.json({
     mongoState: mongoose.connection.readyState,
+    dbName: mongoose.connection.name || "Not Connected",
+    host: mongoose.connection.host || "Not Connected",
     message:
       mongoose.connection.readyState === 1
         ? "MongoDB Connected"
@@ -83,29 +99,28 @@ app.get("/api/test-db", (req, res) => {
   });
 });
 
-// Local Development Only
-const startServer = (port) => {
-  const server = app.listen(port, () => {
-    console.log(`Server is now running on port ${port}`);
-  });
+/* =========================
+   DB Status Route
+========================= */
 
-  server.on("error", (error) => {
-    if (error.code === "EADDRINUSE") {
-      console.warn(
-        `Port ${port} is already in use. Trying port ${port + 1}...`
-      );
-      startServer(port + 1);
-    } else {
-      console.error(error);
-      process.exit(1);
-    }
+app.get("/api/db-status", (req, res) => {
+  res.json({
+    readyState: mongoose.connection.readyState,
+    dbName: mongoose.connection.name,
+    host: mongoose.connection.host,
   });
-};
+});
+
+/* =========================
+   Local Development
+========================= */
 
 if (process.env.NODE_ENV !== "production") {
-  startServer(INITIAL_PORT);
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is now running on port ${PORT}`);
+  });
 }
 
+  //  Export for Vercel
 
-// Export for Vercel
 module.exports = app;
