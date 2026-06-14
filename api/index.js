@@ -1,9 +1,8 @@
-const serverless = require("serverless-http");
-const app = require("../server");
-
-console.log("🚀 Serverless handler initialized");
-
-module.exports = serverless(app);
+// This file can be removed - Vercel automatically wraps server.js with serverless-http
+// Keeping it for reference but not used
+module.exports = (req, res) => {
+	res.status(200).json({ message: "Use server.js instead" });
+};
 
 
 
