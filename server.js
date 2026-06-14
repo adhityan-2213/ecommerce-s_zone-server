@@ -22,10 +22,10 @@ const app = express();
 const INITIAL_PORT = parseInt(process.env.PORT, 10) || 5000;
 
 // MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((error) => console.log(error));
+// mongoose
+//   .connect(process.env.MONGO_URI)
+//   .then(() => console.log("MongoDB connected"))
+//   .catch((error) => console.log(error));
 
 // CORS
 app.use(
@@ -112,6 +112,13 @@ app.get("/api/check-env", (req, res) => {
     mongoUriStart: process.env.MONGO_URI?.substring(0, 40),
   });
 });
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => {
+    console.error("FULL MONGODB ERROR:", err);
+  });
 
 // Export for Vercel
 module.exports = app;
