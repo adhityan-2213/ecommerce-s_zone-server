@@ -3,6 +3,7 @@ const path = require("path");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const connectDB = require("./db");
 require("dotenv").config();
 
 // Debug: Log environment
@@ -31,40 +32,54 @@ const PORT = process.env.PORT || 5000;
    MongoDB Connection
 ========================= */
 
-// Connect to MongoDB with timeout - don't block serverless initialization
-const mongooseConnectionPromise = mongoose
-  .connect(process.env.MONGO_URI, {
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 5000,
-    connectTimeoutMS: 5000,
-  })
-  .then(() => {
-    console.log("✅ MongoDB Connected");
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB Error:", err.message);
-    // App will still work but database operations will fail gracefully
-  });
+let mongooseConnectionPromise = null;
 
-// Don't wait for the connection to complete - serverless functions need to respond quickly
-// Mongoose will retry connections automatically
+async function ensureDbConnection() {
+  if (mongoose.connection.readyState === 1) return;
+  if (!mongooseConnectionPromise) {
+    mongooseConnectionPromise = connectDB().catch((err) => {
+      console.error("❌ MongoDB Connection Error:", err.message);
+      mongooseConnectionPromise = null;
+      throw err;
+    });
+  }
+  await mongooseConnectionPromise;
+}
+
+// Attempt an initial connection, but do not block startup entirely.
+ensureDbConnection().catch(() => {});
 
 /* =========================
    Middleware
 ========================= */
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://ecommerce-s-zone-client.vercel.app",
-    ],
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "https://ecommerce-s-zone-client.vercel.app",
+  ],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(cookieParser());
 app.use(express.json());
+
+app.use(async (req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    try {
+      await ensureDbConnection();
+    } catch (err) {
+      return res.status(503).json({
+        success: false,
+        message: "Database unavailable. Please try again later.",
+      });
+    }
+  }
+  next();
+});
 
 /* =========================
    Static Files
